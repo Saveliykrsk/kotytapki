@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>YouTube</title>
+  <title>KotyTapki YouTube Activity</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     html, body {
@@ -10,21 +10,154 @@
       padding: 0;
       height: 100%;
       width: 100%;
-      background: #000;
+      background: #0f1012;
+      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       overflow: hidden;
+    }
+    .root {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+    .topbar {
+      padding: 8px 12px;
+      background: #111827;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      box-shadow: 0 1px 0 rgba(15,23,42,0.9);
+      z-index: 2;
+    }
+    .topbar span.logo {
+      font-weight: 600;
+      color: #38bdf8;
+      white-space: nowrap;
+    }
+    .topbar input {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 14px;
+      outline: none;
+    }
+    .topbar input::placeholder {
+      color: #6b7280;
+    }
+    .topbar button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      background: #22c55e;
+      color: #020617;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .topbar button:hover {
+      background: #16a34a;
+    }
+    .topbar a.open-yt {
+      font-size: 12px;
+      color: #9ca3af;
+      text-decoration: underline;
+      white-space: nowrap;
+    }
+    .player-wrapper {
+      flex: 1;
+      position: relative;
+      background: #020617;
     }
     iframe {
       border: none;
       width: 100%;
       height: 100%;
     }
+    .hint {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-left: 4px;
+    }
   </style>
 </head>
 <body>
-  <iframe
-    src="https://www.youtube.com"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen
-  ></iframe>
+  <div class="root">
+    <div class="topbar">
+      <span class="logo">KotyTapki YouTube</span>
+      <input
+        id="url-input"
+        type="text"
+        placeholder="Вставь ссылку на YouTube (https://youtu.be/...) и нажми Пуск"
+      />
+      <button id="load-btn">Пуск</button>
+      <a id="open-yt" class="open-yt" href="https://www.youtube.com" target="_blank" rel="noreferrer">
+        Открыть на YouTube
+      </a>
+      <span class="hint">Все в активности видят один и тот же плеер</span>
+    </div>
+    <div class="player-wrapper">
+      <iframe
+        id="player"
+        src="https://www.youtube.com/embed?autoplay=0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </div>
+
+  <script>
+    function extractVideoId(url) {
+      try {
+        const u = new URL(url);
+        if (u.hostname === "youtu.be") {
+          return u.pathname.slice(1);
+        }
+        if (u.hostname.includes("youtube.com")) {
+          if (u.pathname === "/watch") {
+            return u.searchParams.get("v");
+          }
+          const parts = u.pathname.split("/");
+          const idx = parts.indexOf("embed");
+          if (idx !== -1 && parts[idx + 1]) {
+            return parts[idx + 1];
+          }
+        }
+      } catch {
+        return null;
+      }
+      return null;
+    }
+
+    function loadVideo() {
+      const input = document.getElementById("url-input");
+      const iframe = document.getElementById("player");
+      const openYt = document.getElementById("open-yt");
+      const url = input.value.trim();
+      if (!url) return;
+
+      const id = extractVideoId(url);
+      if (!id) {
+        // если не смогли вытащить id — просто откроем URL как есть
+        iframe.src = url;
+        openYt.href = url;
+        return;
+      }
+
+      const embedUrl = "https://www.youtube.com/embed/" + id + "?autoplay=1";
+      iframe.src = embedUrl;
+      openYt.href = "https://www.youtube.com/watch?v=" + id;
+    }
+
+    document.getElementById("load-btn").addEventListener("click", loadVideo);
+    document.getElementById("url-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") loadVideo();
+    });
+  </script>
 </body>
 </html>
